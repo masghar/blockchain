@@ -51,9 +51,18 @@ app.post('/api/transactions', (req, res) => {
   }
 });
 
-app.post('/api/mine', (req, res) => {
+app.post('/api/mine/start', (req, res) => {
   try {
-    const block = blockchain.minePendingTransactions();
+    const template = blockchain.getMiningTemplate();
+    res.json(template);
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
+app.post('/api/mine/submit', (req, res) => {
+  try {
+    const block = blockchain.submitMinedBlock(req.body);
     saveChain(blockchain);
     res.json(block);
   } catch (err) {
