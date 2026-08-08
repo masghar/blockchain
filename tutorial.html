@@ -1,0 +1,165 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ChainDemo Tutorial</title>
+  <style>
+    :root {
+      --bg: #0f1117; --panel: #171a23; --text: #e6e8ef; --muted: #8b90a0;
+      --accent: #5b8cff; --border: #262a38; --code-bg: #0b0d13;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; background: var(--bg); color: var(--text);
+      font-family: system-ui, -apple-system, "Segoe UI", sans-serif; line-height: 1.6;
+    }
+    header {
+      padding: 1rem 2rem; border-bottom: 1px solid var(--border);
+      display: flex; justify-content: space-between; align-items: center;
+    }
+    header a { color: var(--accent); text-decoration: none; }
+    main { max-width: 800px; margin: 0 auto; padding: 1.5rem 2rem 4rem; }
+    h1 { font-size: 1.8rem; }
+    h2 { margin-top: 2.5rem; border-bottom: 1px solid var(--border); padding-bottom: 0.4rem; }
+    p { color: var(--text); }
+    code { font-family: ui-monospace, monospace; background: var(--code-bg); padding: 0.1rem 0.3rem; border-radius: 4px; }
+    pre {
+      background: var(--code-bg); border: 1px solid var(--border); border-radius: 8px;
+      padding: 1rem; overflow-x: auto; font-size: 0.85rem;
+    }
+    pre code { background: none; padding: 0; }
+    .step { background: var(--panel); border: 1px solid var(--border); border-radius: 8px; padding: 1rem 1.25rem; margin: 1rem 0; }
+    .callout { border-left: 3px solid var(--accent); padding-left: 1rem; color: var(--muted); }
+  </style>
+</head>
+<body>
+  <header>
+    <strong>⛓ ChainDemo Tutorial</strong>
+    <a href="index.html">← Back to the app</a>
+  </header>
+
+  <main>
+    <h1>How ChainDemo Works</h1>
+    <p>
+      ChainDemo is a small, self-contained blockchain simulator. This page walks through
+      the four ideas that make a blockchain a blockchain — hashing, chaining, proof-of-work,
+      and tamper-evidence — and shows exactly where each one lives in this project's code.
+    </p>
+
+    <h2>1. What is a blockchain, really?</h2>
+    <p>
+      At its core, a blockchain is a list of records ("blocks") where each block stores a
+      cryptographic fingerprint (a <strong>hash</strong>) of its own contents, and also stores
+      the hash of the block before it. That second part is what turns a plain list into a
+      <em>chain</em>: change anything in an earlier block, and its hash changes, which breaks
+      the link the next block was pointing to.
+    </p>
+
+    <h2>2. Anatomy of a block</h2>
+    <p>Every block in <code>blockchain.js</code> is an instance of the <code>Block</code> class:</p>
+    <pre><code>class Block {
+  constructor(index, timestamp, transactions, previousHash = '') {
+    this.index = index;
+    this.timestamp = timestamp;
+    this.transactions = transactions;   // the data this block stores
+    this.previousHash = previousHash;   // the link to the prior block
+    this.nonce = 0;                     // explained in section 3
+    this.hash = this.calculateHash();
+  }
+}</code></pre>
+    <p>
+      <code>transactions</code> is a plain array of <code>{ from, to, amount }</code> objects —
+      the "ledger entries" you create in the app's "Add Transaction" form.
+    </p>
+
+    <h2>3. Hashing and chaining</h2>
+    <p>
+      <code>calculateHash()</code> feeds every field of the block through SHA-256, a one-way
+      function: the same input always produces the same 64-character hash, but you can't work
+      backwards from a hash to guess the input, and changing even one character of the input
+      produces a completely different hash.
+    </p>
+    <pre><code>calculateHash() {
+  return crypto.createHash('sha256').update(
+    this.index + this.timestamp +
+    JSON.stringify(this.transactions) +
+    this.previousHash + this.nonce
+  ).digest('hex');
+}</code></pre>
+    <p>
+      Because <code>previousHash</code> is one of the ingredients, each block is cryptographically
+      stitched to the one before it. That's the "chain" in blockchain.
+    </p>
+
+    <h2>4. Proof-of-work mining</h2>
+    <p>
+      Anyone could compute a valid-looking hash instantly, so blockchains add an artificial
+      cost: a block's hash must start with a certain number of zero characters (the
+      <strong>difficulty</strong>). There's no shortcut to find such a hash except to keep
+      changing a throwaway number — the <strong>nonce</strong> — and re-hashing until you get
+      lucky. That repeated search is "mining":
+    </p>
+    <pre><code>mine(difficulty) {
+  const target = '0'.repeat(difficulty);
+  while (this.hash.substring(0, difficulty) !== target) {
+    this.nonce++;
+    this.hash = this.calculateHash();
+  }
+}</code></pre>
+    <p class="callout">
+      Try the difficulty slider in the app: each extra leading zero roughly multiplies the
+      number of attempts needed by 16, so mining visibly takes longer.
+    </p>
+
+    <h2>5. Why tampering gets caught</h2>
+    <p>
+      The "tamper" control in the app lets you edit a mined transaction's amount directly —
+      on purpose, without recomputing that block's hash, exactly like an attacker rewriting
+      history would try to do. <code>isChainValid()</code> catches it by recomputing every
+      block's hash fresh and comparing:
+    </p>
+    <pre><code>isChainValid() {
+  const invalidBlocks = [];
+  for (let i = 1; i &lt; this.chain.length; i++) {
+    const current = this.chain[i];
+    const previous = this.chain[i - 1];
+    const currentRecalculated = current.calculateHash();
+    const previousRecalculated = previous.calculateHash();
+    if (current.hash !== currentRecalculated ||
+        current.previousHash !== previousRecalculated) {
+      invalidBlocks.push(i);
+    }
+  }
+  return { valid: invalidBlocks.length === 0, invalidBlocks };
+}</code></pre>
+    <p>
+      The tampered block fails immediately because its stored data no longer matches its
+      stored hash. Every block <em>after</em> it fails too — its recorded
+      <code>previousHash</code> no longer matches what the (now-changed) prior block actually
+      hashes to. This is why editing history in a real blockchain would require re-mining
+      every block after your edit — for a long chain, that's computationally infeasible.
+    </p>
+
+    <h2>6. Run it yourself</h2>
+    <div class="step">
+      <p><strong>1.</strong> Install dependencies:</p>
+      <pre><code>npm install</code></pre>
+      <p><strong>2.</strong> Start the server:</p>
+      <pre><code>npm start</code></pre>
+      <p><strong>3.</strong> Open <code>http://localhost:3000</code> in your browser.</p>
+      <p><strong>4.</strong> (Optional) Run the unit tests for the core logic:</p>
+      <pre><code>npm test</code></pre>
+    </div>
+
+    <h2>7. Using the GUI</h2>
+    <ul>
+      <li><strong>Add Transaction</strong> — fill in from/to/amount and submit; it joins the pending pool waiting to be mined.</li>
+      <li><strong>Mine Block</strong> — bundles all pending transactions into a new block and searches for a valid proof-of-work hash at the current difficulty.</li>
+      <li><strong>Difficulty slider</strong> — sets how many leading zeros the next mined block's hash must have (1–5).</li>
+      <li><strong>Tamper</strong> — edit any mined transaction's amount inline to see the chain turn invalid.</li>
+      <li><strong>Validate Chain</strong> — re-checks every block and highlights broken ones in red.</li>
+    </ul>
+  </main>
+</body>
+</html>
