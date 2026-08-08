@@ -170,16 +170,24 @@ test('submitMinedBlock rejects a submission against stale pending transactions',
   const bc = new Blockchain();
   bc.addTransaction({ from: 'alice', to: 'bob', amount: 10 });
   const template = bc.getMiningTemplate();
+  // Mine a nonce that actually satisfies difficulty for the *template's* snapshot,
+  // so a failure here can only be the staleness guard — not a difficulty miss.
+  const validNonceForTemplate = mineNonceForTemplate(template);
 
   bc.addTransaction({ from: 'bob', to: 'carol', amount: 3 }); // pool changes after the template was read
 
-  assert.throws(() =>
-    bc.submitMinedBlock({
-      timestamp: template.timestamp,
-      nonce: 0,
-      previousHash: template.previousHash,
-      transactions: template.transactions, // stale — no longer matches bc.pendingTransactions
-    })
+  assert.throws(
+    () =>
+      bc.submitMinedBlock({
+        timestamp: template.timestamp,
+        nonce: validNonceForTemplate,
+        previousHash: template.previousHash,
+        transactions: template.transactions, // stale — no longer matches bc.pendingTransactions
+      }),
+    { message: 'Pending transactions changed since mining started — please try again' }
   );
   assert.equal(bc.chain.length, 1);
+  // Guards against the getMiningTemplate() aliasing bug: template.transactions must be
+  // an independent snapshot, not a live reference to bc.pendingTransactions.
+  assert.deepEqual(template.transactions, [{ from: 'alice', to: 'bob', amount: 10 }]);
 });

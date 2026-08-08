@@ -78,7 +78,7 @@ class Blockchain {
     return {
       index: this.chain.length,
       timestamp: Date.now(),
-      transactions: this.pendingTransactions,
+      transactions: [...this.pendingTransactions],
       previousHash: this.getLatestBlock().hash,
       difficulty: this.difficulty,
     };
