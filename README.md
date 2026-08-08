@@ -33,10 +33,10 @@ join — just the mechanics, laid bare, with a UI you can click through.
 **In the app you can:**
 
 - ✍️ **Add transactions** to a pending pool (`from`, `to`, `amount`)
-- ⛏️ **Mine a block** and watch a real **SHA-256 proof-of-work** search run
+- ⛏️ **Watch real proof-of-work mining happen live** — nonce by nonce, in your own browser, via a Web Worker, with a real-time hash-vs-target comparison and hashes/sec counter
 - 🎚️ **Adjust mining difficulty** live and see how much longer mining takes per extra leading zero
 - 🛠️ **Tamper with a mined block** and watch invalidity cascade to every block after it
-- ✅ **Validate the chain** on demand and see exactly which blocks broke
+- ✅ **Watch the chain get validated block-by-block**, with a live walkthrough showing exactly where (and from where onward) it breaks
 
 <div align="center">
 <img src="assets/chain-diagram.svg" alt="Diagram showing that tampering with one block in the chain invalidates every block that comes after it" width="85%" />
@@ -98,11 +98,14 @@ Want the concepts explained alongside the code first? Open
 
 Every block is hashed with SHA-256 over its own contents plus the previous block's hash —
 that's the "chain" in blockchain. Mining searches for a `nonce` that makes the hash start
-with N leading zeros (the difficulty). Change any data in a mined block without re-mining
-it, and its hash no longer matches its contents — and neither does the `previousHash` of
-every block that follows, so the break cascades forward. That's tamper-evidence in action.
+with N leading zeros (the difficulty) — and in this app, that search runs for real in your
+own browser (a Web Worker with a hand-written, Node-crypto-verified SHA-256), not on the
+server. The server never trusts the result blindly: it re-derives the hash itself before
+accepting a mined block. Change any data in a mined block without re-mining it, and its
+hash no longer matches its contents — and neither does the `previousHash` of every block
+that follows, so the break cascades forward. That's tamper-evidence in action.
 
-For the full walkthrough — with the actual `calculateHash()`, `mine()`, and
+For the full walkthrough — with the actual `calculateHash()`, the live mining protocol, and
 `isChainValid()` code from this repo — see **[tutorial.html](tutorial.html)**.
 
 ## Using the GUI
@@ -110,10 +113,12 @@ For the full walkthrough — with the actual `calculateHash()`, `mine()`, and
 | Control | What it does |
 |---|---|
 | **Add Transaction** | Queues a `{ from, to, amount }` entry into the pending pool |
-| **⛏ Mine Block** | Bundles pending transactions into a new block and runs proof-of-work at the current difficulty |
+| **⛏ Start Mining** | Opens the live mining console — real proof-of-work running in your browser, with a live nonce, hash-vs-target comparison, attempts counter, and hashes/sec |
+| **✕ Cancel** | Stops an in-progress mining run immediately |
 | **Difficulty slider (1–5)** | Sets how many leading zeros the next mined block's hash must have — each extra zero roughly multiplies the search space by 16 |
 | **Inline amount edit** | Tampers with a mined transaction directly, without re-mining — the fastest way to see detection in action |
-| **✓ Validate Chain** | Recomputes every block's hash and flags exactly which blocks are invalid |
+| **✓ Validate Chain** | Walks the chain block-by-block with a visible pulse, then shows exactly where (and everything after where) it breaks |
+| **Stats bar** | Chain length, total transactions, current difficulty, and a live validity badge |
 
 ## API Reference
 
@@ -125,7 +130,8 @@ Postman, or your own frontend):
 | `GET` | `/api/chain` | Full chain |
 | `GET` | `/api/pending` | Pending (unmined) transactions |
 | `POST` | `/api/transactions` | Queue a transaction `{from, to, amount}` |
-| `POST` | `/api/mine` | Mine pending transactions into a new block |
+| `POST` | `/api/mine/start` | Get a mining template (index, timestamp, transactions, previousHash, difficulty) to mine against |
+| `POST` | `/api/mine/submit` | Submit a found `{ timestamp, nonce, previousHash, transactions }` — server re-verifies and appends the block |
 | `GET` | `/api/validate` | Check chain validity — returns `{ valid, invalidBlocks }` |
 | `POST` | `/api/tamper` | Deliberately corrupt a block's transaction (demo only) |
 | `GET` / `POST` | `/api/difficulty` | Read/set mining difficulty (clamped 1–5) |
@@ -138,7 +144,9 @@ curl -X POST http://localhost:3000/api/transactions \
   -H "Content-Type: application/json" \
   -d '{"from":"alice","to":"bob","amount":10}'
 
-curl -X POST http://localhost:3000/api/mine
+curl -X POST http://localhost:3000/api/mine/start
+# → mine a nonce against the returned template client-side, then:
+# curl -X POST http://localhost:3000/api/mine/submit -d '{"timestamp":...,"nonce":...,"previousHash":"...","transactions":[...]}'
 ```
 
 </details>
@@ -146,12 +154,16 @@ curl -X POST http://localhost:3000/api/mine
 ## Project Structure
 
 ```
-blockchain.js             Core Block/Blockchain classes (framework-free, unit-testable)
-server.js                 Express app: REST API + chain.json persistence + static file serving
-public/                   Browser GUI (index.html, styles.css, app.js) — no build step
-tutorial.html             Standalone written walkthrough of the concepts and code
-test/blockchain.test.js   Unit tests for the core module
-chain.json                Generated at runtime; holds the persisted chain (git-ignored)
+blockchain.js               Core Block/Blockchain classes (framework-free, unit-testable)
+server.js                   Express app: REST API + chain.json persistence + static file serving
+public/                     Browser GUI — no build step
+  index.html, styles.css, app.js   Page structure, styling, and UI logic
+  sha256.js                 Hand-written SHA-256, tested against Node's crypto
+  mining-input.js           Shared hash-input format used by both client and server
+  miner-worker.js           Web Worker that mines live in the browser
+tutorial.html               Standalone written walkthrough of the concepts and code
+test/                       Unit tests (blockchain logic + client/server hash parity)
+chain.json                  Generated at runtime; holds the persisted chain (git-ignored)
 ```
 
 ## Tech Stack
@@ -198,6 +210,11 @@ longer.
 **Does the chain survive a server restart?**
 Yes — it's persisted to `chain.json` on disk after every mine/tamper/difficulty change, and
 reloaded automatically on the next `npm start`.
+
+**Why does mining happen in my browser instead of on the server?**
+So you can actually watch it happen. The server hands out a mining template and your
+browser searches for the nonce in a Web Worker, live, in the open — then the server
+independently re-verifies the result before accepting it, so nothing is taken on trust.
 
 ## Roadmap
 

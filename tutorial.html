@@ -92,24 +92,50 @@
       stitched to the one before it. That's the "chain" in blockchain.
     </p>
 
-    <h2>4. Proof-of-work mining</h2>
+    <h2>4. Proof-of-work mining — done live, in your browser</h2>
     <p>
       Anyone could compute a valid-looking hash instantly, so blockchains add an artificial
       cost: a block's hash must start with a certain number of zero characters (the
       <strong>difficulty</strong>). There's no shortcut to find such a hash except to keep
       changing a throwaway number — the <strong>nonce</strong> — and re-hashing until you get
-      lucky. That repeated search is "mining":
+      lucky. That repeated search is "mining."
     </p>
-    <pre><code>mine(difficulty) {
-  const target = '0'.repeat(difficulty);
-  while (this.hash.substring(0, difficulty) !== target) {
-    this.nonce++;
-    this.hash = this.calculateHash();
+    <p>
+      In this app, that search doesn't happen on the server — it happens for real, in your
+      browser, inside a <a href="https://developer.mozilla.org/en-US/docs/Web/API/Web_Workers_API">Web
+      Worker</a> (<code>public/miner-worker.js</code>), so the rest of the page stays responsive
+      while it churns:
+    </p>
+    <pre><code>while (!cancelled) {
+  const hash = sha256Hex(buildMiningInput(index, timestamp, transactions, previousHash, nonce));
+  attempts++;
+  if (hash.startsWith(target)) {
+    self.postMessage({ type: 'found', nonce, hash, attempts, elapsedMs });
+    return;
   }
+  nonce++;
 }</code></pre>
+    <p>
+      The worker uses a small hand-written SHA-256 implementation
+      (<code>public/sha256.js</code>) rather than the browser's built-in Web Crypto API — Web
+      Crypto's <code>subtle.digest()</code> is asynchronous (one Promise per hash), which is far
+      too slow for a tight search loop trying thousands of hashes a second. This hand-written
+      version is tested against Node's own <code>crypto</code> module for a range of inputs, so
+      it can never silently drift from what the server checks.
+    </p>
+    <p>
+      Since the browser is now the one doing the mining, the server can't just trust whatever
+      hash it's told. So the flow is: <code>POST /api/mine/start</code> hands the browser a
+      snapshot of what to mine against (the pending transactions, the previous hash, a fixed
+      timestamp, and the difficulty); the browser searches for a nonce and shows you every
+      step live; then <code>POST /api/mine/submit</code> sends back the nonce it found, and the
+      server <strong>recomputes the hash itself</strong> before accepting the block. A client
+      that lied about the nonce, or mined against stale pending transactions, gets rejected.
+    </p>
     <p class="callout">
       Try the difficulty slider in the app: each extra leading zero roughly multiplies the
-      number of attempts needed by 16, so mining visibly takes longer.
+      number of attempts needed by 16, so mining visibly takes longer — and you can watch it
+      happen in the live mining console instead of just waiting.
     </p>
 
     <h2>5. Why tampering gets caught</h2>
@@ -169,10 +195,12 @@
     <h2>7. Using the GUI</h2>
     <ul>
       <li><strong>Add Transaction</strong> — fill in from/to/amount and submit; it joins the pending pool waiting to be mined.</li>
-      <li><strong>Mine Block</strong> — bundles all pending transactions into a new block and searches for a valid proof-of-work hash at the current difficulty.</li>
       <li><strong>Difficulty slider</strong> — sets how many leading zeros the next mined block's hash must have (1–5).</li>
+      <li><strong>⛏ Start Mining</strong> — opens the live mining console: watch the nonce, the current hash attempt (color-coded against the target), attempts, elapsed time, and hashes/sec update in real time as your browser searches.</li>
+      <li><strong>✕ Cancel</strong> — stops an in-progress mining run immediately.</li>
       <li><strong>Tamper</strong> — edit any mined transaction's amount inline to see the chain turn invalid.</li>
-      <li><strong>Validate Chain</strong> — re-checks every block and highlights broken ones in red.</li>
+      <li><strong>✓ Validate Chain</strong> — walks the chain block-by-block, pulsing each one while it's checked, then shows exactly where (and everything after where) it breaks.</li>
+      <li><strong>Stats bar</strong> — chain length, total transactions, current difficulty, and a live validity badge, always visible at the top of the page.</li>
     </ul>
   </main>
 </body>
