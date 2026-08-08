@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ChainDemo</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="topbar">
+    <h1>⛓ ChainDemo</h1>
+    <nav><a href="tutorial.html">Tutorial</a></nav>
+  </header>
+
+  <main>
+    <section class="panel">
+      <h2>Add Transaction</h2>
+      <form id="tx-form">
+        <input id="tx-from" type="text" placeholder="From" required />
+        <input id="tx-to" type="text" placeholder="To" required />
+        <input id="tx-amount" type="number" placeholder="Amount" min="0.01" step="0.01" required />
+        <button type="submit">Add to Pending</button>
+      </form>
+      <p id="tx-error" class="error"></p>
+
+      <h3>Pending Transactions</h3>
+      <ul id="pending-list"></ul>
+    </section>
+
+    <section class="panel">
+      <h2>Mining</h2>
+      <label for="difficulty">Difficulty: <span id="difficulty-value">2</span></label>
+      <input id="difficulty" type="range" min="1" max="5" value="2" />
+      <button id="mine-btn">⛏ Mine Block</button>
+      <button id="validate-btn">✓ Validate Chain</button>
+      <p id="mine-status"></p>
+    </section>
+
+    <section class="panel">
+      <h2>Chain</h2>
+      <p class="hint">Edit an amount inline to tamper with a block and watch validation fail.</p>
+      <div id="chain" class="chain"></div>
+    </section>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>
