@@ -82,19 +82,24 @@ class Blockchain {
   }
 
   isChainValid() {
-    const invalidBlocks = [];
+    let brokenFrom = null;
     for (let i = 1; i < this.chain.length; i++) {
       const current = this.chain[i];
       const previous = this.chain[i - 1];
-      const currentRecalculated = current.calculateHash();
-      const previousRecalculated = previous.calculateHash();
-      if (
-        current.hash !== currentRecalculated ||
-        current.previousHash !== previousRecalculated
-      ) {
-        invalidBlocks.push(i);
+      const selfConsistent = current.hash === current.calculateHash();
+      const linkedToPrevious = current.previousHash === previous.hash;
+      if (!selfConsistent || !linkedToPrevious) {
+        // Once a block fails, every block after it is built on top of a
+        // corrupted link and can't be trusted either — even if their own
+        // data and hash are internally self-consistent.
+        brokenFrom = i;
+        break;
       }
     }
+    const invalidBlocks =
+      brokenFrom === null
+        ? []
+        : this.chain.slice(brokenFrom).map((block) => block.index);
     return { valid: invalidBlocks.length === 0, invalidBlocks };
   }
 

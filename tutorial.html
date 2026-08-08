@@ -116,29 +116,43 @@
     <p>
       The "tamper" control in the app lets you edit a mined transaction's amount directly —
       on purpose, without recomputing that block's hash, exactly like an attacker rewriting
-      history would try to do. <code>isChainValid()</code> catches it by recomputing every
-      block's hash fresh and comparing:
+      history would try to do. <code>isChainValid()</code> catches it by walking the chain
+      from the start, checking each block against its own recalculated hash and against its
+      neighbor's stored hash:
     </p>
     <pre><code>isChainValid() {
-  const invalidBlocks = [];
+  let brokenFrom = null;
   for (let i = 1; i &lt; this.chain.length; i++) {
     const current = this.chain[i];
     const previous = this.chain[i - 1];
-    const currentRecalculated = current.calculateHash();
-    const previousRecalculated = previous.calculateHash();
-    if (current.hash !== currentRecalculated ||
-        current.previousHash !== previousRecalculated) {
-      invalidBlocks.push(i);
+    const selfConsistent = current.hash === current.calculateHash();
+    const linkedToPrevious = current.previousHash === previous.hash;
+    if (!selfConsistent || !linkedToPrevious) {
+      brokenFrom = i;
+      break;
     }
   }
+  const invalidBlocks = brokenFrom === null
+    ? []
+    : this.chain.slice(brokenFrom).map(block =&gt; block.index);
   return { valid: invalidBlocks.length === 0, invalidBlocks };
 }</code></pre>
     <p>
       The tampered block fails immediately because its stored data no longer matches its
-      stored hash. Every block <em>after</em> it fails too — its recorded
-      <code>previousHash</code> no longer matches what the (now-changed) prior block actually
-      hashes to. This is why editing history in a real blockchain would require re-mining
-      every block after your edit — for a long chain, that's computationally infeasible.
+      stored hash. But notice what happens one block further downstream: that next block's
+      own data never changed, so recalculating <em>its</em> hash still matches what's stored
+      — the only thing that broke is the tampered block itself. If <code>isChainValid()</code>
+      only compared each block to its immediate neighbor, the "invalid" flag would stop
+      spreading right there, one hop past the tamper, even though everything after it now
+      sits on top of a corrupted link.
+    </p>
+    <p>
+      That's why the loop stops at the <em>first</em> broken block and marks
+      <strong>everything from that point to the end of the chain</strong> as invalid, rather
+      than only flagging blocks whose direct link is broken. Once one block in the chain
+      can't be trusted, nothing built on top of it can be trusted either — which is also why
+      rewriting history in a real blockchain means re-mining every block after your edit, not
+      just the one you changed.
     </p>
 
     <h2>6. Run it yourself</h2>

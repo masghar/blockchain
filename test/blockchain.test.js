@@ -44,6 +44,22 @@ test('tampering with a block is detected and cascades to later blocks', () => {
   assert.deepEqual(result.invalidBlocks, [1, 2]);
 });
 
+test('tampering invalidates every block after it, not just the next one', () => {
+  const bc = new Blockchain();
+  bc.addTransaction({ from: 'alice', to: 'bob', amount: 10 });
+  bc.minePendingTransactions(); // block 1
+  bc.addTransaction({ from: 'bob', to: 'carol', amount: 3 });
+  bc.minePendingTransactions(); // block 2
+  bc.addTransaction({ from: 'carol', to: 'dave', amount: 7 });
+  bc.minePendingTransactions(); // block 3
+
+  bc.tamperBlock(1, 0, 99999);
+  const result = bc.isChainValid();
+
+  assert.equal(result.valid, false);
+  assert.deepEqual(result.invalidBlocks, [1, 2, 3]);
+});
+
 test('addTransaction rejects invalid input', () => {
   const bc = new Blockchain();
   assert.throws(() => bc.addTransaction({ from: '', to: 'bob', amount: 10 }));
