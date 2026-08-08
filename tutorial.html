@@ -81,12 +81,18 @@
       produces a completely different hash.
     </p>
     <pre><code>calculateHash() {
-  return crypto.createHash('sha256').update(
-    this.index + this.timestamp +
-    JSON.stringify(this.transactions) +
-    this.previousHash + this.nonce
-  ).digest('hex');
+  return crypto
+    .createHash('sha256')
+    .update(buildMiningInput(this.index, this.timestamp, this.transactions, this.previousHash, this.nonce))
+    .digest('hex');
 }</code></pre>
+    <p>
+      <code>buildMiningInput</code> (<code>public/mining-input.js</code>) just concatenates those
+      same fields — <code>index + timestamp + JSON.stringify(transactions) + previousHash +
+      nonce</code> — but it's pulled out into its own tiny module so the server and the browser's
+      mining Web Worker build the exact same string to hash from the exact same code, instead of
+      two copies that could quietly drift apart.
+    </p>
     <p>
       Because <code>previousHash</code> is one of the ingredients, each block is cryptographically
       stitched to the one before it. That's the "chain" in blockchain.
@@ -106,7 +112,7 @@
       Worker</a> (<code>public/miner-worker.js</code>), so the rest of the page stays responsive
       while it churns:
     </p>
-    <pre><code>while (!cancelled) {
+    <pre><code>while (true) {
   const hash = sha256Hex(buildMiningInput(index, timestamp, transactions, previousHash, nonce));
   attempts++;
   if (hash.startsWith(target)) {
@@ -115,6 +121,14 @@
   }
   nonce++;
 }</code></pre>
+    <p>
+      Cancelling a run doesn't work by sending the worker a message — a Web Worker is
+      single-threaded, so it can't read an incoming <code>{ type: 'cancel' }</code> message
+      until this tight loop yields, which only happens when it finds a result. Instead, the
+      <strong>✕ Cancel</strong> button calls <code>Worker.terminate()</code> from the main
+      thread — a hard stop that kills the worker immediately, no cooperation from the loop
+      required.
+    </p>
     <p>
       The worker uses a small hand-written SHA-256 implementation
       (<code>public/sha256.js</code>) rather than the browser's built-in Web Crypto API — Web

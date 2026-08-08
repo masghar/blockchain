@@ -1,15 +1,14 @@
 importScripts('sha256.js', 'mining-input.js');
 
-let cancelled = false;
-
+// Cancellation is handled by the main thread calling .terminate() on this
+// worker (a hard stop) rather than an in-worker message protocol: this
+// worker is single-threaded and runs a tight synchronous loop in mine(),
+// so it can never process an incoming message mid-loop — onmessage only
+// gets a chance to run again once mine() returns, which happens only when
+// it finds a result.
 self.onmessage = (event) => {
   const msg = event.data;
-  if (msg.type === 'cancel') {
-    cancelled = true;
-    return;
-  }
   if (msg.type === 'mine') {
-    cancelled = false;
     mine(msg.template);
   }
 };
@@ -22,7 +21,7 @@ function mine(template) {
   const startTime = Date.now();
   let lastPost = startTime;
 
-  while (!cancelled) {
+  while (true) {
     const hash = sha256Hex(buildMiningInput(index, timestamp, transactions, previousHash, nonce));
     attempts++;
 

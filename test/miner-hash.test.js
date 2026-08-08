@@ -19,6 +19,10 @@ test('sha256Hex matches Node crypto for a range of inputs', () => {
     'y'.repeat(56),
     'y'.repeat(57),
     'y'.repeat(1000),
+    '\ud800',
+    '\udc00',
+    'a\ud83d b',
+    '🚀',
   ];
   for (const input of cases) {
     assert.equal(sha256Hex(input), nodeSha256(input), `mismatch for input length ${input.length}`);

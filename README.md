@@ -170,7 +170,7 @@ chain.json                  Generated at runtime; holds the persisted chain (git
 
 - **Backend:** [Node.js](https://nodejs.org) + [Express](https://expressjs.com)
 - **Frontend:** Plain HTML, CSS, and JavaScript — no framework, no bundler, no build step
-- **Hashing:** SHA-256 via Node's built-in [`crypto`](https://nodejs.org/api/crypto.html) module
+- **Hashing:** SHA-256 — server-side via Node's built-in [`crypto`](https://nodejs.org/api/crypto.html) module, and client-side (for live mining) via a hand-written implementation in `public/sha256.js`, cross-tested against Node's `crypto` for parity
 - **Persistence:** A flat `chain.json` file (no database required)
 - **Testing:** Node's built-in [`node:test`](https://nodejs.org/api/test.html) runner
 

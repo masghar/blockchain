@@ -90,10 +90,11 @@ function renderBlock(block, state) {
     </div>`;
 }
 
-function renderTimeline(chain, states) {
+function renderTimeline(chain, states, controlsDisabled) {
   chainEl.innerHTML = chain.map((block, i) => renderBlock(block, states[i])).join('');
   chainEl.querySelectorAll('[data-tamper-block]').forEach((input) => {
     input.addEventListener('change', onTamper);
+    if (controlsDisabled) input.disabled = true;
   });
 }
 
@@ -138,22 +139,24 @@ async function onValidate() {
   const chain = await chainRes.json();
 
   const states = chain.map(() => 'pending');
-  renderTimeline(chain, states);
+  renderTimeline(chain, states, true);
+  validityBadge.textContent = 'checking…';
+  validityBadge.className = 'badge checking';
 
   const firstInvalid = result.invalidBlocks.length ? Math.min(...result.invalidBlocks) : null;
 
   for (let i = 0; i < chain.length; i++) {
     states[i] = 'checking';
-    renderTimeline(chain, states);
+    renderTimeline(chain, states, true);
     await sleep(180);
 
     if (firstInvalid !== null && i >= firstInvalid) {
       for (let j = i; j < chain.length; j++) states[j] = 'invalid';
-      renderTimeline(chain, states);
+      renderTimeline(chain, states, true);
       break;
     }
     states[i] = 'valid';
-    renderTimeline(chain, states);
+    renderTimeline(chain, states, true);
   }
 
   updateStatsBar(chain, result.valid ? 'valid' : `invalid: ${result.invalidBlocks.join(', ')}`, result.valid ? 'valid' : 'invalid');
@@ -210,6 +213,9 @@ function finishMining(message, isError) {
   mineBtn.textContent = '⛏ Start Mining';
   cancelBtn.hidden = true;
   setControlsDisabled(false);
+  if (miningWorker) {
+    miningWorker.terminate();
+  }
   miningWorker = null;
 }
 

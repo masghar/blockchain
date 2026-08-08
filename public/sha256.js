@@ -19,6 +19,14 @@ function sha256Hex(message) {
     for (let i = 0; i < str.length; i++) {
       let code = str.codePointAt(i);
       if (code > 0xffff) i++;
+      if (code >= 0xd800 && code <= 0xdfff) {
+        // Lone (unpaired) surrogate — codePointAt() returned the raw
+        // surrogate code unit because it wasn't part of a valid pair.
+        // Match Node's UTF-8 encoder: substitute U+FFFD (replacement
+        // character) instead of encoding the raw surrogate value.
+        bytes.push(0xef, 0xbf, 0xbd);
+        continue;
+      }
       if (code < 0x80) {
         bytes.push(code);
       } else if (code < 0x800) {
