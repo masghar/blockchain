@@ -12,6 +12,24 @@
     <nav><a href="tutorial.html">Tutorial</a></nav>
   </header>
 
+  <div class="stats-bar" id="stats-bar">
+    <div class="stat">
+      <span class="stat-value" id="stat-length">1</span>
+      <span class="stat-label">blocks</span>
+    </div>
+    <div class="stat">
+      <span class="stat-value" id="stat-tx">0</span>
+      <span class="stat-label">transactions</span>
+    </div>
+    <div class="stat">
+      <span class="stat-value" id="stat-difficulty">2</span>
+      <span class="stat-label">difficulty</span>
+    </div>
+    <div class="stat">
+      <span class="badge" id="validity-badge">checking…</span>
+    </div>
+  </div>
+
   <main>
     <section class="panel">
       <h2>Add Transaction</h2>
@@ -27,19 +45,44 @@
       <ul id="pending-list"></ul>
     </section>
 
-    <section class="panel">
-      <h2>Mining</h2>
-      <label for="difficulty">Difficulty: <span id="difficulty-value">2</span></label>
-      <input id="difficulty" type="range" min="1" max="5" value="2" />
-      <button id="mine-btn">⛏ Mine Block</button>
-      <button id="validate-btn">✓ Validate Chain</button>
-      <p id="mine-status"></p>
+    <section class="panel console-panel">
+      <h2>Mining Console</h2>
+      <div class="mining-controls">
+        <label for="difficulty">Difficulty: <span id="difficulty-value">2</span></label>
+        <input id="difficulty" type="range" min="1" max="5" value="2" />
+        <button id="mine-btn">⛏ Start Mining</button>
+        <button id="cancel-btn" class="cancel" hidden>✕ Cancel</button>
+        <button id="validate-btn">✓ Validate Chain</button>
+      </div>
+
+      <div class="console" aria-live="polite">
+        <div class="console-idle" id="console-idle">Ready to mine. Add a transaction, then press Start Mining.</div>
+
+        <div class="console-active" id="console-active" hidden>
+          <div class="race-target">
+            Target prefix: <code id="race-target-text">00</code>
+            <span class="race-target-rest">— everything else in the hash is free</span>
+          </div>
+          <div class="race-strip" id="race-current"></div>
+
+          <div class="console-metrics">
+            <div><span class="metric-label">nonce</span><span class="metric-value" id="metric-nonce">0</span></div>
+            <div><span class="metric-label">attempts</span><span class="metric-value" id="metric-attempts">0</span></div>
+            <div><span class="metric-label">elapsed</span><span class="metric-value" id="metric-elapsed">0.0s</span></div>
+            <div><span class="metric-label">hashes/sec</span><span class="metric-value" id="metric-rate">0</span></div>
+          </div>
+
+          <div class="console-feed" id="console-feed"></div>
+        </div>
+
+        <div class="console-result" id="console-result" hidden></div>
+      </div>
     </section>
 
     <section class="panel">
       <h2>Chain</h2>
       <p class="hint">Edit an amount inline to tamper with a block and watch validation fail.</p>
-      <div id="chain" class="chain"></div>
+      <div id="chain" class="timeline"></div>
     </section>
   </main>
 
