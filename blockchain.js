@@ -1,4 +1,5 @@
 const crypto = require('crypto');
+const { buildMiningInput } = require('./public/mining-input');
 
 class Block {
   constructor(index, timestamp, transactions, previousHash = '') {
@@ -13,13 +14,7 @@ class Block {
   calculateHash() {
     return crypto
       .createHash('sha256')
-      .update(
-        this.index +
-          this.timestamp +
-          JSON.stringify(this.transactions) +
-          this.previousHash +
-          this.nonce
-      )
+      .update(buildMiningInput(this.index, this.timestamp, this.transactions, this.previousHash, this.nonce))
       .digest('hex');
   }
 
@@ -71,6 +66,46 @@ class Blockchain {
       this.getLatestBlock().hash
     );
     block.mine(this.difficulty);
+    this.chain.push(block);
+    this.pendingTransactions = [];
+    return block;
+  }
+
+  getMiningTemplate() {
+    if (this.pendingTransactions.length === 0) {
+      throw new Error('No pending transactions to mine');
+    }
+    return {
+      index: this.chain.length,
+      timestamp: Date.now(),
+      transactions: this.pendingTransactions,
+      previousHash: this.getLatestBlock().hash,
+      difficulty: this.difficulty,
+    };
+  }
+
+  submitMinedBlock({ timestamp, nonce, previousHash, transactions }) {
+    if (this.pendingTransactions.length === 0) {
+      throw new Error('No pending transactions to mine');
+    }
+
+    const currentPreviousHash = this.getLatestBlock().hash;
+    const stillCurrent =
+      previousHash === currentPreviousHash &&
+      JSON.stringify(transactions) === JSON.stringify(this.pendingTransactions);
+    if (!stillCurrent) {
+      throw new Error('Pending transactions changed since mining started — please try again');
+    }
+
+    const block = new Block(this.chain.length, timestamp, this.pendingTransactions, currentPreviousHash);
+    block.nonce = nonce;
+    block.hash = block.calculateHash();
+
+    const target = '0'.repeat(this.difficulty);
+    if (block.hash.substring(0, this.difficulty) !== target) {
+      throw new Error('Submitted hash does not meet the required difficulty');
+    }
+
     this.chain.push(block);
     this.pendingTransactions = [];
     return block;
