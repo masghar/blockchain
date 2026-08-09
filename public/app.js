@@ -12,6 +12,7 @@ const difficultyValue = document.getElementById('difficulty-value');
 const consoleIdle = document.getElementById('console-idle');
 const consoleActive = document.getElementById('console-active');
 const consoleResult = document.getElementById('console-result');
+const consoleSolved = document.getElementById('console-solved');
 const raceTargetText = document.getElementById('race-target-text');
 const raceCurrent = document.getElementById('race-current');
 const metricNonce = document.getElementById('metric-nonce');
@@ -219,6 +220,36 @@ function finishMining(message, isError) {
   miningWorker = null;
 }
 
+function renderSolvedSummary(template, found, block) {
+  const difficulty = template.difficulty;
+  const target = '0'.repeat(difficulty);
+  const matched = found.hash.slice(0, difficulty);
+  const rest = found.hash.slice(difficulty);
+  const seconds = (found.elapsedMs / 1000).toFixed(2);
+  const rate = found.elapsedMs > 0 ? Math.round((found.attempts / found.elapsedMs) * 1000) : found.attempts;
+
+  consoleSolved.innerHTML = `
+    <h3>✓ Proof of work solved — block #${block.index}</h3>
+    <p><strong>The problem:</strong> find a nonce so that SHA-256(this block's data + nonce) produces a hash starting with <code>${target}</code> — there's no shortcut, only trying nonces one by one.</p>
+    <p><strong>The answer found:</strong> nonce <code>${found.nonce.toLocaleString()}</code></p>
+    <div class="solved-hash"><span class="solved-match">${matched}</span>${rest}</div>
+    <p>It took <strong>${found.attempts.toLocaleString()}</strong> attempts over <strong>${seconds}s</strong> (≈${rate.toLocaleString()} hashes/sec) to find a nonce that worked.</p>
+    <p><strong>How it was validated:</strong> the server independently recomputed SHA-256 of block #${block.index}'s actual data with nonce <code>${found.nonce.toLocaleString()}</code>, confirmed the result starts with <code>${target}</code>, and only then accepted it onto the chain.</p>
+  `;
+  consoleSolved.hidden = false;
+}
+
+function finishMiningSuccess(template, found, block) {
+  mineBtn.textContent = '⛏ Start Mining';
+  cancelBtn.hidden = true;
+  setControlsDisabled(false);
+  if (miningWorker) {
+    miningWorker.terminate();
+  }
+  miningWorker = null;
+  renderSolvedSummary(template, found, block);
+}
+
 async function submitMinedBlock(template, found) {
   try {
     const res = await fetch('/api/mine/submit', {
@@ -233,10 +264,7 @@ async function submitMinedBlock(template, found) {
     });
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || 'Mining submission was rejected');
-    finishMining(
-      `Mined block #${data.index} in ${found.attempts} attempts (${(found.elapsedMs / 1000).toFixed(2)}s)`,
-      false
-    );
+    finishMiningSuccess(template, found, data);
     await loadPending();
     await onValidate();
   } catch (err) {
@@ -247,6 +275,7 @@ async function submitMinedBlock(template, found) {
 async function startMining() {
   consoleIdle.hidden = true;
   consoleResult.hidden = true;
+  consoleSolved.hidden = true;
   consoleActive.hidden = false;
   feedEntries = [];
   consoleFeed.innerHTML = '';

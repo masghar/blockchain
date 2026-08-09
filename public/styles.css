@@ -212,6 +212,37 @@ button.cancel { background: var(--bad); color: var(--on-accent); }
 .console-result { font-family: system-ui, sans-serif; color: var(--good); }
 .console-result.error { color: var(--bad); }
 
+.console-solved {
+  border: 1px solid var(--good);
+  background: var(--good-tint);
+  border-radius: 8px;
+  padding: 0.85rem 1rem;
+  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+  font-size: 0.85rem;
+  line-height: 1.5;
+}
+
+.console-solved h3 {
+  margin: 0 0 0.5rem;
+  font-size: 0.95rem;
+  color: var(--good);
+}
+
+.console-solved p { margin: 0.4rem 0; }
+
+.console-solved .solved-hash {
+  font-family: ui-monospace, monospace;
+  font-size: 0.78rem;
+  word-break: break-all;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 0.4rem 0.6rem;
+  margin: 0.4rem 0;
+}
+
+.console-solved .solved-match { color: var(--good); font-weight: 700; }
+
 .timeline {
   position: relative;
   display: flex;
