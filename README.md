@@ -12,7 +12,7 @@ Mine blocks with real proof-of-work · tamper with data and watch the chain brea
 [![No build step](https://img.shields.io/badge/frontend-no%20build%20step-informational.svg)](#tech-stack)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](#contributing)
 
-[**Live Demo**](#quick-start) · [**Tutorial**](tutorial.html) · [**API Reference**](#api-reference) · [**FAQ**](#faq)
+[**Live Demo**](https://chaindemo.onrender.com) · [**Tutorial**](tutorial.html) · [**API Reference**](#api-reference) · [**FAQ**](#faq)
 
 </div>
 
@@ -81,6 +81,13 @@ or peer-to-peer networking. That's on purpose — stripping those away is what m
 core mechanism (hash → chain → proof-of-work → tamper-evidence) easy to see clearly.
 
 ## Quick Start
+
+Just want to try it? Open **[chaindemo.onrender.com](https://chaindemo.onrender.com)** —
+no install needed. It's on a free tier, so it spins down after a few minutes idle and
+resets to a fresh chain the next time someone visits — expect a slower first load if it's
+been asleep.
+
+To run it yourself instead:
 
 **Requirements:** [Node.js](https://nodejs.org) 18 or later.
 
