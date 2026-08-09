@@ -225,21 +225,26 @@ function renderSolvedSummary(template, found, block) {
   const target = '0'.repeat(difficulty);
   const matched = found.hash.slice(0, difficulty);
   const rest = found.hash.slice(difficulty);
-  const seconds = (found.elapsedMs / 1000).toFixed(2);
-  const rate = found.elapsedMs > 0 ? Math.round((found.attempts / found.elapsedMs) * 1000) : found.attempts;
+  const secondsText = found.elapsedMs > 0 ? `${(found.elapsedMs / 1000).toFixed(2)}s` : 'under 0.01s';
+  const rateText = found.elapsedMs > 0
+    ? `≈${Math.round((found.attempts / found.elapsedMs) * 1000).toLocaleString()} hashes/sec`
+    : 'too fast to measure precisely';
+  const attemptsText = found.attempts === 1 ? '1 attempt' : `${found.attempts.toLocaleString()} attempts`;
 
   consoleSolved.innerHTML = `
     <h3>✓ Proof of work solved — block #${block.index}</h3>
     <p><strong>The problem:</strong> find a nonce so that SHA-256(this block's data + nonce) produces a hash starting with <code>${target}</code> — there's no shortcut, only trying nonces one by one.</p>
     <p><strong>The answer found:</strong> nonce <code>${found.nonce.toLocaleString()}</code></p>
     <div class="solved-hash"><span class="solved-match">${matched}</span>${rest}</div>
-    <p>It took <strong>${found.attempts.toLocaleString()}</strong> attempts over <strong>${seconds}s</strong> (≈${rate.toLocaleString()} hashes/sec) to find a nonce that worked.</p>
+    <p>It took <strong>${attemptsText}</strong> over <strong>${secondsText}</strong> (${rateText}) to find a nonce that worked.</p>
     <p><strong>How it was validated:</strong> the server independently recomputed SHA-256 of block #${block.index}'s actual data with nonce <code>${found.nonce.toLocaleString()}</code>, confirmed the result starts with <code>${target}</code>, and only then accepted it onto the chain.</p>
   `;
   consoleSolved.hidden = false;
 }
 
 function finishMiningSuccess(template, found, block) {
+  consoleActive.hidden = false;
+  consoleResult.hidden = true;
   mineBtn.textContent = '⛏ Start Mining';
   cancelBtn.hidden = true;
   setControlsDisabled(false);
@@ -302,6 +307,7 @@ async function startMining() {
       updateLiveMetrics(msg, template.difficulty);
     } else if (msg.type === 'found') {
       updateLiveMetrics(msg, template.difficulty);
+      cancelBtn.hidden = true;
       submitMinedBlock(template, msg);
     }
   };

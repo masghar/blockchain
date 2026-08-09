@@ -3,15 +3,15 @@
   --panel: #ffffff;
   --console-bg: #eef0f6;
   --text: #1a1d29;
-  --muted: #6b7280;
+  --muted: #565d6a;
   --accent: #3b5fe0;
   --on-accent: #ffffff;
-  --good: #1a9d5c;
-  --good-tint: rgba(26, 157, 92, 0.14);
+  --good: #0f7a45;
+  --good-tint: rgba(15, 122, 69, 0.14);
   --bad: #d92d3f;
   --bad-tint: rgba(217, 45, 63, 0.14);
-  --amber: #b8720a;
-  --amber-tint: rgba(184, 114, 10, 0.16);
+  --amber: #8f5600;
+  --amber-tint: rgba(143, 86, 0, 0.16);
   --border: #dde1e8;
 }
 
