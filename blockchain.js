@@ -112,7 +112,7 @@ class Blockchain {
   }
 
   setDifficulty(level) {
-    this.difficulty = Math.min(5, Math.max(1, Math.floor(Number(level))));
+    this.difficulty = Math.min(10, Math.max(1, Math.floor(Number(level))));
     return this.difficulty;
   }
 
