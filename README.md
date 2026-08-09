@@ -6,8 +6,8 @@
 
 Mine blocks with real proof-of-work · tamper with data and watch the chain break · learn how blockchains actually work by reading (and running) the code
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-37c977.svg)](LICENSE)
-[![Node.js](https://img.shields.io/badge/Node.js-%E2%89%A518-5b8cff.svg)](https://nodejs.org)
+[![License: MIT](https://img.shields.io/badge/License-MIT-0f7a45.svg)](LICENSE)
+[![Node.js](https://img.shields.io/badge/Node.js-%E2%89%A518-3b5fe0.svg)](https://nodejs.org)
 [![Made with JavaScript](https://img.shields.io/badge/Made%20with-JavaScript-f7df1e.svg)](https://developer.mozilla.org/en-US/docs/Web/JavaScript)
 [![No build step](https://img.shields.io/badge/frontend-no%20build%20step-informational.svg)](#tech-stack)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](#contributing)
@@ -28,15 +28,17 @@ abstract theory.
 It's a great starting point if you're learning **how blockchain works**, teaching a
 workshop, prepping for an interview, or just want a **Node.js blockchain example** you can
 read end-to-end in one sitting. No cryptocurrency, no wallets, no blockchain network to
-join — just the mechanics, laid bare, with a UI you can click through.
+join — just the mechanics, laid bare, with a clean, light, readable UI you can click
+through.
 
 **In the app you can:**
 
-- ✍️ **Add transactions** to a pending pool (`from`, `to`, `amount`)
-- ⛏️ **Watch real proof-of-work mining happen live** — nonce by nonce, in your own browser, via a Web Worker, with a real-time hash-vs-target comparison and hashes/sec counter
-- 🎚️ **Adjust mining difficulty** live and see how much longer mining takes per extra leading zero
-- 🛠️ **Tamper with a mined block** and watch invalidity cascade to every block after it
-- ✅ **Watch the chain get validated block-by-block**, with a live walkthrough showing exactly where (and from where onward) it breaks
+- **Add transactions** to a pending pool (`from`, `to`, `amount`)
+- **Watch real proof-of-work mining happen live** — nonce by nonce, in your own browser, via a Web Worker, with a real-time hash-vs-target comparison and hashes/sec counter
+- **See exactly what was solved** — once a block is mined, a summary stays on screen explaining the problem (find a nonce producing a hash with N leading zeros), the winning nonce and hash, the cost in attempts and time, and how the server independently verified it
+- **Adjust mining difficulty** live and see how much longer mining takes per extra leading zero
+- **Tamper with a mined block** and watch invalidity cascade to every block after it
+- **Watch the chain get validated block-by-block**, with a live walkthrough showing exactly where (and from where onward) it breaks
 
 <div align="center">
 <img src="assets/chain-diagram.svg" alt="Diagram showing that tampering with one block in the chain invalidates every block that comes after it" width="85%" />
@@ -68,11 +70,11 @@ cryptocurrency client. ChainDemo sits in between:
 
 | | ChainDemo | Whitepapers & theory | Full crypto clients |
 |---|---|---|---|
-| Runs in your browser | ✅ | ❌ | Sometimes |
-| Readable in one sitting | ✅ | Depends | ❌ |
-| Real SHA-256 proof-of-work | ✅ | Described only | ✅ |
-| Zero dependencies to learn | ✅ (just Express) | — | ❌ (wallets, P2P, consensus…) |
-| Tamper-detection you can trigger yourself | ✅ | ❌ | Rarely exposed in the UI |
+| Runs in your browser | ✓ | ✗ | Sometimes |
+| Readable in one sitting | ✓ | Depends | ✗ |
+| Real SHA-256 proof-of-work | ✓ | Described only | ✓ |
+| Zero dependencies to learn | ✓ (just Express) | — | ✗ (wallets, P2P, consensus…) |
+| Tamper-detection you can trigger yourself | ✓ | ✗ | Rarely exposed in the UI |
 
 It's deliberately **not** a cryptocurrency: there are no wallets, private keys, signatures,
 or peer-to-peer networking. That's on purpose — stripping those away is what makes the
@@ -113,11 +115,12 @@ For the full walkthrough — with the actual `calculateHash()`, the live mining 
 | Control | What it does |
 |---|---|
 | **Add Transaction** | Queues a `{ from, to, amount }` entry into the pending pool |
-| **⛏ Start Mining** | Opens the live mining console — real proof-of-work running in your browser, with a live nonce, hash-vs-target comparison, attempts counter, and hashes/sec |
-| **✕ Cancel** | Stops an in-progress mining run immediately |
+| **Start Mining** | Opens the live mining console — real proof-of-work running in your browser, with a live nonce, hash-vs-target comparison, attempts counter, and hashes/sec |
+| **Cancel** | Stops an in-progress mining run immediately |
 | **Difficulty slider (1–5)** | Sets how many leading zeros the next mined block's hash must have — each extra zero roughly multiplies the search space by 16 |
+| **Solved summary** | After a successful mine, stays on screen with the problem statement, the winning nonce and hash, the cost, and how the server validated it — until the next mining run starts |
 | **Inline amount edit** | Tampers with a mined transaction directly, without re-mining — the fastest way to see detection in action |
-| **✓ Validate Chain** | Walks the chain block-by-block with a visible pulse, then shows exactly where (and everything after where) it breaks |
+| **Validate Chain** | Walks the chain block-by-block with a visible pulse, then shows exactly where (and everything after where) it breaks |
 | **Stats bar** | Chain length, total transactions, current difficulty, and a live validity badge |
 
 ## API Reference
@@ -169,7 +172,7 @@ chain.json                  Generated at runtime; holds the persisted chain (git
 ## Tech Stack
 
 - **Backend:** [Node.js](https://nodejs.org) + [Express](https://expressjs.com)
-- **Frontend:** Plain HTML, CSS, and JavaScript — no framework, no bundler, no build step
+- **Frontend:** Plain HTML, CSS, and JavaScript — no framework, no bundler, no build step. Light theme, tuned for accessible (WCAG AA) contrast.
 - **Hashing:** SHA-256 — server-side via Node's built-in [`crypto`](https://nodejs.org/api/crypto.html) module, and client-side (for live mining) via a hand-written implementation in `public/sha256.js`, cross-tested against Node's `crypto` for parity
 - **Persistence:** A flat `chain.json` file (no database required)
 - **Testing:** Node's built-in [`node:test`](https://nodejs.org/api/test.html) runner
@@ -180,9 +183,9 @@ chain.json                  Generated at runtime; holds the persisted chain (git
 npm test
 ```
 
-Runs the unit test suite in `test/blockchain.test.js`, covering hash chaining, mining
-difficulty, cascading tamper detection, transaction validation, and JSON persistence
-round-trips.
+Runs the unit test suite in `test/`, covering hash chaining, mining difficulty, cascading
+tamper detection, transaction validation, JSON persistence round-trips, and client/server
+hash parity between the browser's mining Web Worker and the server's own hashing.
 
 ## FAQ
 
@@ -241,6 +244,6 @@ Released under the [MIT License](LICENSE) — free to use, modify, and learn fro
 
 <div align="center">
 
-If ChainDemo helped you understand blockchains a little better, consider ⭐ **starring the repo**.
+If ChainDemo helped you understand blockchains a little better, consider starring the repo.
 
 </div>

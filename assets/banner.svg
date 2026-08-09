@@ -1,29 +1,36 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 220" width="960" height="220" role="img" aria-label="ChainDemo — a blockchain simulator with a web GUI">
   <defs>
     <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0%" stop-color="#0f1117"/>
-      <stop offset="100%" stop-color="#171a2c"/>
+      <stop offset="0%" stop-color="#ffffff"/>
+      <stop offset="100%" stop-color="#eef0f6"/>
     </linearGradient>
     <linearGradient id="accent" x1="0" y1="0" x2="1" y2="0">
-      <stop offset="0%" stop-color="#5b8cff"/>
-      <stop offset="100%" stop-color="#37c977"/>
+      <stop offset="0%" stop-color="#3b5fe0"/>
+      <stop offset="100%" stop-color="#0f7a45"/>
     </linearGradient>
   </defs>
 
   <rect width="960" height="220" rx="18" fill="url(#bg)"/>
-  <rect x="1" y="1" width="958" height="218" rx="17" fill="none" stroke="#262a38" stroke-width="1.5"/>
+  <rect x="1" y="1" width="958" height="218" rx="17" fill="none" stroke="#dde1e8" stroke-width="1.5"/>
 
   <!-- decorative block chain motif -->
   <g opacity="0.9">
-    <rect x="700" y="150" width="46" height="34" rx="6" fill="none" stroke="#37c977" stroke-width="2"/>
-    <rect x="770" y="150" width="46" height="34" rx="6" fill="none" stroke="#37c977" stroke-width="2"/>
-    <rect x="840" y="150" width="46" height="34" rx="6" fill="none" stroke="#5b8cff" stroke-width="2"/>
-    <line x1="746" y1="167" x2="770" y2="167" stroke="#37c977" stroke-width="2"/>
-    <line x1="816" y1="167" x2="840" y2="167" stroke="#5b8cff" stroke-width="2"/>
+    <rect x="700" y="150" width="46" height="34" rx="6" fill="none" stroke="#0f7a45" stroke-width="2"/>
+    <rect x="770" y="150" width="46" height="34" rx="6" fill="none" stroke="#0f7a45" stroke-width="2"/>
+    <rect x="840" y="150" width="46" height="34" rx="6" fill="none" stroke="#3b5fe0" stroke-width="2"/>
+    <line x1="746" y1="167" x2="770" y2="167" stroke="#0f7a45" stroke-width="2"/>
+    <line x1="816" y1="167" x2="840" y2="167" stroke="#3b5fe0" stroke-width="2"/>
   </g>
 
-  <text x="56" y="92" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="46" fill="#e6e8ef" font-weight="700">⛓ ChainDemo</text>
+  <!-- wordmark icon: two linked blocks, standing in for a literal chain-link glyph -->
+  <g>
+    <rect x="56" y="64" width="24" height="24" rx="6" fill="none" stroke="url(#accent)" stroke-width="4"/>
+    <line x1="80" y1="76" x2="92" y2="76" stroke="url(#accent)" stroke-width="4"/>
+    <rect x="92" y="64" width="24" height="24" rx="6" fill="none" stroke="url(#accent)" stroke-width="4"/>
+  </g>
+
+  <text x="128" y="92" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="46" fill="#1a1d29" font-weight="700">ChainDemo</text>
   <rect x="58" y="110" width="360" height="4" rx="2" fill="url(#accent)"/>
-  <text x="56" y="148" font-family="system-ui, -apple-system, Segoe UI, sans-serif" font-size="19" fill="#b7bcca">A hands-on blockchain simulator with proof-of-work mining,</text>
-  <text x="56" y="174" font-family="system-ui, -apple-system, Segoe UI, sans-serif" font-size="19" fill="#b7bcca">tamper detection, and a live web GUI — built in Node.js.</text>
+  <text x="56" y="148" font-family="system-ui, -apple-system, Segoe UI, sans-serif" font-size="19" fill="#565d6a">A hands-on blockchain simulator with proof-of-work mining,</text>
+  <text x="56" y="174" font-family="system-ui, -apple-system, Segoe UI, sans-serif" font-size="19" fill="#565d6a">tamper detection, and a live web GUI — built in Node.js.</text>
 </svg>
