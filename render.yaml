@@ -1,0 +1,11 @@
+services:
+  - type: web
+    name: chaindemo
+    runtime: node
+    plan: free
+    buildCommand: npm install
+    startCommand: npm start
+    autoDeploy: true
+    envVars:
+      - key: NODE_VERSION
+        value: 20.18.0
