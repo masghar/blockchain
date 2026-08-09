@@ -1,14 +1,18 @@
 :root {
-  --bg: #0f1117;
-  --panel: #171a23;
-  --console-bg: #0a0c11;
-  --text: #e6e8ef;
-  --muted: #8b90a0;
-  --accent: #5b8cff;
-  --good: #37c977;
-  --bad: #ff5566;
-  --amber: #ffb454;
-  --border: #262a38;
+  --bg: #f5f6fa;
+  --panel: #ffffff;
+  --console-bg: #eef0f6;
+  --text: #1a1d29;
+  --muted: #6b7280;
+  --accent: #3b5fe0;
+  --on-accent: #ffffff;
+  --good: #1a9d5c;
+  --good-tint: rgba(26, 157, 92, 0.14);
+  --bad: #d92d3f;
+  --bad-tint: rgba(217, 45, 63, 0.14);
+  --amber: #b8720a;
+  --amber-tint: rgba(184, 114, 10, 0.16);
+  --border: #dde1e8;
 }
 
 * { box-sizing: border-box; }
@@ -76,9 +80,9 @@ body {
   color: var(--muted);
 }
 
-.badge.valid { background: rgba(55, 201, 119, 0.2); color: var(--good); }
-.badge.invalid { background: rgba(255, 85, 102, 0.2); color: var(--bad); }
-.badge.checking { background: rgba(255, 180, 84, 0.2); color: var(--amber); }
+.badge.valid { background: var(--good-tint); color: var(--good); }
+.badge.invalid { background: var(--bad-tint); color: var(--bad); }
+.badge.checking { background: var(--amber-tint); color: var(--amber); }
 
 main {
   max-width: 1000px;
@@ -94,6 +98,7 @@ main {
   border: 1px solid var(--border);
   border-radius: 10px;
   padding: 1.25rem 1.5rem;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.06);
 }
 
 .panel h2 { margin-top: 0; }
@@ -107,13 +112,13 @@ input, button {
   padding: 0.5rem 0.75rem;
   border-radius: 6px;
   border: 1px solid var(--border);
-  background: #0f1117;
+  background: var(--panel);
   color: var(--text);
 }
 
 button {
   background: var(--accent);
-  color: #0f1117;
+  color: var(--on-accent);
   border: none;
   cursor: pointer;
   font-weight: 600;
@@ -121,7 +126,7 @@ button {
 
 button:hover { opacity: 0.9; }
 input:disabled, button:disabled { opacity: 0.5; cursor: not-allowed; }
-button.cancel { background: var(--bad); color: #12151d; }
+button.cancel { background: var(--bad); color: var(--on-accent); }
 
 .error { color: var(--bad); min-height: 1.2em; }
 
@@ -173,8 +178,8 @@ button.cancel { background: var(--bad); color: #12151d; }
   color: var(--muted);
 }
 
-.race-char.match { background: rgba(55, 201, 119, 0.25); color: var(--good); font-weight: 700; }
-.race-char.miss { background: rgba(255, 85, 102, 0.25); color: var(--bad); font-weight: 700; }
+.race-char.match { background: var(--good-tint); color: var(--good); font-weight: 700; }
+.race-char.miss { background: var(--bad-tint); color: var(--bad); font-weight: 700; }
 .race-char.rest { opacity: 0.55; }
 
 .console-metrics {
@@ -248,7 +253,8 @@ button.cancel { background: var(--bad); color: #12151d; }
   border: 2px solid var(--border);
   border-radius: 10px;
   padding: 1rem 1.25rem;
-  background: #12151d;
+  background: var(--panel);
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
   transition: border-color 0.2s ease, opacity 0.2s ease;
 }
 
